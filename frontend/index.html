@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WSO2 Log Analyzer</title>
+  <link rel="stylesheet" href="/static/css/main.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/log-viewer.css" />
+</head>
+<body>
+  <!-- ── App Shell ───────────────────────────────────────────────────────── -->
+  <div class="app-shell">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="28" height="28" rx="6" fill="var(--accent-blue)" opacity="0.15"/>
+            <path d="M6 8h16M6 14h10M6 20h13" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="21" cy="20" r="3" fill="var(--accent-green)"/>
+          </svg>
+          <span class="sidebar-title">WSO2 Logs</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="projects">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+          </svg>
+          <span>Projects</span>
+        </button>
+        <button class="nav-item" data-tab="logs" disabled>
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+          </svg>
+          <span>Logs</span>
+        </button>
+        <button class="nav-item" data-tab="analytics" disabled>
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+          </svg>
+          <span>Analytics</span>
+        </button>
+        <button class="nav-item" data-tab="repos" disabled>
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          <span>Repos</span>
+        </button>
+        <button class="nav-item" data-tab="ai" disabled>
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+          </svg>
+          <span>AI</span>
+          <span class="nav-badge">Soon</span>
+        </button>
+        <button class="nav-item" data-tab="settings" disabled>
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="version-badge">v0.1.0 Sprint 1</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+      <!-- Top Header Bar -->
+      <header class="top-bar">
+        <div class="breadcrumb">
+          <span class="breadcrumb-app">WSO2 Log Analyzer</span>
+          <span class="breadcrumb-sep" id="breadcrumb-sep" style="display:none">›</span>
+          <span class="breadcrumb-project" id="breadcrumb-project"></span>
+        </div>
+        <div class="top-bar-actions">
+          <div class="project-badge" id="project-badge" style="display:none">
+            <span class="project-badge-icon">◉</span>
+            <span id="project-badge-name"></span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Tab: Projects ──────────────────────────────────────────────────── -->
+      <section id="tab-projects" class="tab-content active">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Projects</h1>
+            <p class="page-subtitle">Create or open a WSO2 analysis project</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="ProjectManager.showOpenProjectModal()">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+              Open Existing
+            </button>
+            <button class="btn btn-primary" onclick="ProjectManager.showCreateProjectModal()">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+              New Project
+            </button>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <h2 class="section-title">Recent Projects</h2>
+            <button class="btn btn-ghost btn-sm" onclick="ProjectManager.renderRecentProjects()">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div id="recent-projects-list" class="projects-grid">
+            <div class="empty-state">
+              <div class="empty-state-icon">📁</div>
+              <div class="empty-state-title">No recent projects</div>
+              <div class="empty-state-desc">Create a new project to get started</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Logs ──────────────────────────────────────────────────────── -->
+      <section id="tab-logs" class="tab-content">
+        <div class="log-viewer-shell">
+
+          <!-- Left sidebar: file list + filters -->
+          <div class="log-sidebar">
+            <div class="log-sidebar-header">
+              <span class="log-sidebar-title">Log Files</span>
+              <div class="log-sidebar-actions">
+                <button class="btn btn-ghost btn-xs" title="Upload" onclick="LogManager.showUploadModal()">+</button>
+                <button class="btn btn-ghost btn-xs" title="Add path" onclick="LogManager.showAddPathModal()">&#8862;</button>
+                <button class="btn btn-ghost btn-xs" title="Add folder" onclick="LogManager.showAddFolderModal()">&#128194;</button>
+              </div>
+            </div>
+            <div id="log-file-list-sidebar" class="log-file-list"></div>
+          </div>
+
+          <!-- Main log viewer area -->
+          <div class="log-viewer-main">
+            <!-- Filter bar -->
+            <div class="filter-bar" id="filter-bar">
+              <div class="level-toggles">
+                <button class="level-toggle active" data-level="FATAL">FATAL</button>
+                <button class="level-toggle active" data-level="ERROR">ERROR</button>
+                <button class="level-toggle active" data-level="WARN">WARN</button>
+                <button class="level-toggle active" data-level="INFO">INFO</button>
+                <button class="level-toggle active" data-level="DEBUG">DEBUG</button>
+                <button class="level-toggle active" data-level="TRACE">TRACE</button>
+              </div>
+              <div class="filter-search-wrap">
+                <input type="text" id="filter-search" class="filter-input" placeholder="Search logs... (use /regex/ for regex)" />
+                <label class="filter-checkbox-label">
+                  <input type="checkbox" id="filter-errors-only"> Errors only
+                </label>
+                <label class="filter-checkbox-label">
+                  <input type="checkbox" id="filter-stack-only"> Has stack trace
+                </label>
+              </div>
+              <div class="filter-stats" id="filter-stats"></div>
+            </div>
+
+            <!-- Log entries virtual scroll container -->
+            <div id="log-viewport" class="log-viewport">
+              <div id="log-spacer-top" class="log-spacer"></div>
+              <div id="log-entries-container" class="log-entries-container"></div>
+              <div id="log-spacer-bottom" class="log-spacer"></div>
+            </div>
+
+            <!-- Detail panel (slides up from bottom) -->
+            <div id="log-detail-panel" class="log-detail-panel hidden">
+              <div class="log-detail-header">
+                <div class="log-detail-meta" id="log-detail-meta"></div>
+                <button class="btn btn-ghost btn-xs" onclick="LogViewer.closeDetail()">&#x2715;</button>
+              </div>
+              <div class="log-detail-message" id="log-detail-message"></div>
+              <div class="log-detail-stack" id="log-detail-stack"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Tab: Analytics ─────────────────────────────────────────────────── -->
+      <section id="tab-analytics" class="tab-content">
+        <div class="page-header">
+          <h1 class="page-title">Analytics</h1>
+        </div>
+        <div class="coming-soon-panel">
+          <div class="coming-soon-icon">📊</div>
+          <h2>Analytics — Coming in Sprint 2</h2>
+          <p>Log parsing, error classification, timeline view, and performance metrics will be available here.</p>
+        </div>
+      </section>
+
+      <!-- Tab: Repos ─────────────────────────────────────────────────────── -->
+      <section id="tab-repos" class="tab-content">
+        <div class="page-header">
+          <h1 class="page-title">Repositories</h1>
+        </div>
+        <div class="coming-soon-panel">
+          <div class="coming-soon-icon">⑃</div>
+          <h2>Repository Linking — Coming Soon</h2>
+          <p>Link source code repositories to correlate log lines with code.</p>
+        </div>
+      </section>
+
+      <!-- Tab: AI ────────────────────────────────────────────────────────── -->
+      <section id="tab-ai" class="tab-content">
+        <div class="page-header">
+          <h1 class="page-title">AI Assistant</h1>
+        </div>
+        <div class="coming-soon-panel">
+          <div class="coming-soon-icon">🤖</div>
+          <h2>AI Analysis — Coming Soon</h2>
+          <p>Intelligent log analysis, root cause detection, and fix suggestions powered by LLMs.</p>
+        </div>
+      </section>
+
+      <!-- Tab: Settings ──────────────────────────────────────────────────── -->
+      <section id="tab-settings" class="tab-content">
+        <div class="page-header">
+          <h1 class="page-title">Settings</h1>
+        </div>
+        <div class="coming-soon-panel">
+          <div class="coming-soon-icon">⚙️</div>
+          <h2>Project Settings — Coming Soon</h2>
+          <p>Configure large log mode, slow operation thresholds, and timezone settings.</p>
+        </div>
+      </section>
+
+    </div><!-- /main-content -->
+  </div><!-- /app-shell -->
+
+  <!-- ── Modal Overlay ───────────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="modal-overlay" onclick="Modal.handleOverlayClick(event)">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Dialog</h3>
+        <button class="modal-close" onclick="Modal.hide()">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- ── Toast Notifications ─────────────────────────────────────────────── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ── Scripts ─────────────────────────────────────────────────────────── -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/components/toast.js"></script>
+  <script src="/static/js/components/modal.js"></script>
+  <script src="/static/js/project-manager.js"></script>
+  <script src="/static/js/log-manager.js"></script>
+  <script src="/static/js/log-viewer.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
