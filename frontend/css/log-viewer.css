@@ -121,28 +121,51 @@
 .filter-checkbox-label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
 .filter-stats { font-size: 12px; color: var(--text-muted); white-space: nowrap; margin-left: auto; }
 
+/* ── Utility ─────────────────────────────────────────────────────── */
+.log-viewport.hidden { display: none; }
+
+/* ── Loading overlay ────────────────────────────────────────────── */
+.log-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.log-loading.hidden { display: none; }
+
 /* ── Log Viewport (virtual scroll) ─────────────────────────────── */
 .log-viewport {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;   /* always show scrollbar so width is stable */
   overflow-x: hidden;
   font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
   font-size: 12.5px;
   line-height: 1.5;
+  /* Smooth scroll on all platforms */
+  scroll-behavior: auto;
 }
-.log-spacer { pointer-events: none; }
-.log-entries-container {}
+/* Inner container: fixed height = N * ROW_H, rows positioned absolutely */
+.log-scroll-inner {
+  position: relative;
+  width: 100%;
+  /* height is set by JS: _entries.length * ROW_H */
+}
 
 /* ── Log Entry Row ──────────────────────────────────────────────── */
 .log-entry {
+  position: absolute;
+  left: 0;
+  right: 0;
   display: grid;
   grid-template-columns: 52px 58px 120px 180px 1fr;
-  align-items: baseline;
+  align-items: center;
   gap: 0;
-  padding: 2px 0;
+  height: 26px;         /* ROW_H — must match JS constant */
+  overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
   cursor: pointer;
   transition: background 0.1s;
+  box-sizing: border-box;
 }
 .log-entry:hover { background: var(--bg-secondary); }
 .log-entry.selected { background: color-mix(in srgb, var(--accent-blue) 10%, transparent); }

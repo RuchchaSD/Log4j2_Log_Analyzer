@@ -166,11 +166,12 @@
               <div class="filter-stats" id="filter-stats"></div>
             </div>
 
+            <!-- Loading overlay (outside the scroll container) -->
+            <div id="log-loading" class="log-loading hidden">Parsing log file…</div>
+
             <!-- Log entries virtual scroll container -->
             <div id="log-viewport" class="log-viewport">
-              <div id="log-spacer-top" class="log-spacer"></div>
-              <div id="log-entries-container" class="log-entries-container"></div>
-              <div id="log-spacer-bottom" class="log-spacer"></div>
+              <div id="log-scroll-inner" class="log-scroll-inner"></div>
             </div>
 
             <!-- Detail panel (slides up from bottom) -->

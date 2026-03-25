@@ -1,6 +1,6 @@
 // ── Log Viewer ────────────────────────────────────────────────────────────────
 const LogViewer = (() => {
-  const ITEM_HEIGHT = 24;       // px per row (estimate)
+  const ROW_H = 26;             // px per row — must match CSS .log-entry height
   const BUFFER = 40;            // extra rows rendered above/below viewport
   const PAGE_SIZE = 300;        // entries fetched per API call
 
@@ -25,6 +25,14 @@ const LogViewer = (() => {
 
   // ── Public API ──────────────────────────────────────────────────────────────
 
+  function _clearInner() {
+    const inner = document.getElementById('log-scroll-inner');
+    if (inner) { inner.innerHTML = ''; inner.style.height = '0px'; }
+    // Reset scroll position
+    const vp = document.getElementById('log-viewport');
+    if (vp) vp.scrollTop = 0;
+  }
+
   async function loadFile(logFileId, projectId) {
     _logFileId = logFileId;
     _projectId = projectId;
@@ -34,7 +42,7 @@ const LogViewer = (() => {
     _selectedIndex = null;
     _expandedIndices.clear();
     closeDetail();
-    _renderEntries();
+    _clearInner();
     _showLoading(true);
     await _fetchAndAppend(0);
     _showLoading(false);
@@ -49,6 +57,7 @@ const LogViewer = (() => {
     _selectedIndex = null;
     _expandedIndices.clear();
     closeDetail();
+    _clearInner();
     _showLoading(true);
     await _fetchAndAppend(0);
     _showLoading(false);
@@ -99,31 +108,57 @@ const LogViewer = (() => {
   }
 
   // ── Virtual Scroll Rendering ─────────────────────────────────────────────────
+  // Approach: #log-scroll-inner has position:relative and fixed height = N * ROW_H.
+  // Each row is position:absolute with top = idx * ROW_H.
+  // This means the scrollable height never changes during rendering, so the
+  // browser's scroll momentum, scrollbar drag, and position are all stable.
 
   function _renderEntries() {
     const viewport = document.getElementById('log-viewport');
-    const container = document.getElementById('log-entries-container');
-    const spacerTop = document.getElementById('log-spacer-top');
-    const spacerBottom = document.getElementById('log-spacer-bottom');
-    if (!viewport || !container) return;
+    const inner = document.getElementById('log-scroll-inner');
+    if (!viewport || !inner) return;
+
+    const totalH = _entries.length * ROW_H;
+
+    // Only update height if it changed — avoid unnecessary style writes
+    if (inner.style.height !== totalH + 'px') {
+      inner.style.height = totalH + 'px';
+    }
 
     const scrollTop = viewport.scrollTop;
-    const viewportH = viewport.clientHeight;
+    const viewportH = viewport.clientHeight || viewport.offsetHeight;
 
-    const startIdx = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
-    const endIdx = Math.min(_entries.length, Math.ceil((scrollTop + viewportH) / ITEM_HEIGHT) + BUFFER);
+    const startIdx = Math.max(0, Math.floor(scrollTop / ROW_H) - BUFFER);
+    const endIdx = Math.min(_entries.length, Math.ceil((scrollTop + viewportH) / ROW_H) + BUFFER);
 
-    spacerTop.style.height = (startIdx * ITEM_HEIGHT) + 'px';
-    spacerBottom.style.height = ((_entries.length - endIdx) * ITEM_HEIGHT) + 'px';
+    // Build a map of currently rendered rows by index for diffing
+    const existing = new Map();
+    for (const child of inner.children) {
+      existing.set(+child.dataset.idx, child);
+    }
 
+    // Remove rows that are now out of the window
+    for (const [idx, el] of existing) {
+      if (idx < startIdx || idx >= endIdx) {
+        inner.removeChild(el);
+        existing.delete(idx);
+      }
+    }
+
+    // Add rows that are now in the window but not rendered
     const fragment = document.createDocumentFragment();
     for (let i = startIdx; i < endIdx; i++) {
-      fragment.appendChild(_buildRow(_entries[i], i));
+      if (!existing.has(i)) {
+        const row = _buildRow(_entries[i], i);
+        row.style.top = (i * ROW_H) + 'px';
+        fragment.appendChild(row);
+      }
     }
-    container.innerHTML = '';
-    container.appendChild(fragment);
+    if (fragment.childNodes.length > 0) {
+      inner.appendChild(fragment);
+    }
 
-    // Load more if near bottom
+    // Fetch more entries if near the loaded bottom
     if (_entries.length < _total && endIdx >= _entries.length - 20) {
       _fetchAndAppend(_offset);
     }
@@ -272,11 +307,11 @@ const LogViewer = (() => {
   }
 
   function _showLoading(show) {
-    const container = document.getElementById('log-entries-container');
-    if (!container) return;
-    if (show && _entries.length === 0) {
-      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)">Parsing log file...</div>';
-    }
+    const el = document.getElementById('log-loading');
+    const vp = document.getElementById('log-viewport');
+    if (!el) return;
+    el.classList.toggle('hidden', !show);
+    if (vp) vp.classList.toggle('hidden', show);
   }
 
   function _escapeHtml(str) {
