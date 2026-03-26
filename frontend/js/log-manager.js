@@ -37,24 +37,24 @@ const LogManager = {
   showUploadModal() {
     const body = `
       <div id="upload-dropzone" class="dropzone" onclick="document.getElementById('upload-file-input').click()">
-        <input id="upload-file-input" type="file" accept=".log,.txt" />
+        <input id="upload-file-input" type="file" accept=".log,.txt" multiple />
         <div class="dropzone-icon">📤</div>
-        <div class="dropzone-title">Drop a log file here, or click to browse</div>
-        <div class="dropzone-subtitle">Supported: .log, .txt</div>
-        <div class="dropzone-hint" id="dropzone-hint">No file selected</div>
+        <div class="dropzone-title">Drop log files here, or click to browse</div>
+        <div class="dropzone-subtitle">Supported: .log, .txt · Multiple files allowed</div>
+        <div class="dropzone-hint" id="dropzone-hint">No files selected</div>
       </div>`;
 
     const footer = `
       <button class="btn btn-ghost" onclick="Modal.hide()">Cancel</button>
       <button class="btn btn-primary" id="upload-btn" onclick="LogManager._doUpload()" disabled>Upload</button>`;
 
-    Modal.show('Upload Log File', body, footer);
+    Modal.show('Upload Log Files', body, footer);
 
     // Wire up file input
     const fileInput = document.getElementById('upload-file-input');
     fileInput.addEventListener('change', () => {
-      if (fileInput.files[0]) {
-        LogManager._setSelectedFile(fileInput.files[0]);
+      if (fileInput.files.length > 0) {
+        LogManager._setSelectedFiles(Array.from(fileInput.files));
       }
     });
 
@@ -65,34 +65,62 @@ const LogManager = {
     dz.addEventListener('drop', (e) => {
       e.preventDefault();
       dz.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file) LogManager._setSelectedFile(file);
+      const files = Array.from(e.dataTransfer.files).filter(
+        f => f.name.endsWith('.log') || f.name.endsWith('.txt')
+      );
+      if (files.length > 0) LogManager._setSelectedFiles(files);
     });
   },
 
-  _setSelectedFile(file) {
-    LogManager._pendingFile = file;
-    document.getElementById('dropzone-hint').innerHTML =
-      `<span class="dropzone-filename">${_esc(file.name)}</span>
-       <span style="color:var(--text-muted)"> · ${_formatSize(file.size)}</span>`;
+  _setSelectedFiles(files) {
+    LogManager._pendingFiles = files;
+    const hint = document.getElementById('dropzone-hint');
+    if (files.length === 1) {
+      hint.innerHTML =
+        `<span class="dropzone-filename">${_esc(files[0].name)}</span>
+         <span style="color:var(--text-muted)"> · ${_formatSize(files[0].size)}</span>`;
+    } else {
+      const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+      hint.innerHTML =
+        `<span class="dropzone-filename">${files.length} files selected</span>
+         <span style="color:var(--text-muted)"> · ${_formatSize(totalSize)} total</span>`;
+    }
     document.getElementById('upload-btn').disabled = false;
+    document.getElementById('upload-btn').textContent =
+      files.length === 1 ? 'Upload' : `Upload ${files.length} Files`;
   },
 
   async _doUpload() {
-    const file = LogManager._pendingFile;
-    if (!file) return;
+    const files = LogManager._pendingFiles;
+    if (!files || files.length === 0) return;
 
     const btn = document.getElementById('upload-btn');
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner spinner-sm"></div> Uploading…';
 
-    try {
-      await LogManager.uploadFile(file);
-      Modal.hide();
-    } catch (err) {
-      btn.disabled = false;
-      btn.innerHTML = 'Upload';
+    let succeeded = 0;
+    let failed = 0;
+    const projectId = App.state.currentProject?.id;
+
+    for (let i = 0; i < files.length; i++) {
+      btn.innerHTML = `<div class="spinner spinner-sm"></div> Uploading ${i + 1}/${files.length}…`;
+      try {
+        await api.uploadLog(projectId, files[i]);
+        succeeded++;
+      } catch (err) {
+        failed++;
+        Toast.error(`Failed to upload "${files[i].name}": ${err.message}`);
+      }
     }
+
+    Modal.hide();
+    if (succeeded > 0) {
+      Toast.success(
+        succeeded === 1
+          ? `Uploaded "${files[0].name}"`
+          : `Uploaded ${succeeded} file${succeeded !== 1 ? 's' : ''}`
+      );
+    }
+    LogManager.renderLogFiles();
   },
 
   async uploadFile(file) {
