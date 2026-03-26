@@ -50,6 +50,8 @@ const App = {
     App.state.currentProject = project;
     App._updateProjectHeader(project);
     App._updateTabAccess();
+    // Clear viewer state whenever the active project changes
+    if (typeof LogViewer !== 'undefined') LogViewer.reset();
   },
 
   // ── Update header breadcrumb / project badge ───────────────────────────────

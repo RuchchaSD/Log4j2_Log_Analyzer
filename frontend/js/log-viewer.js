@@ -22,6 +22,7 @@ const LogViewer = (() => {
   let _scrollRAF = null;
   let _searchDebounce = null;
   let _activeLevels = new Set(['FATAL','ERROR','WARN','INFO','DEBUG','TRACE']);
+  let _generation = 0;   // incremented on reset/load — stale fetches discard their results
 
   // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -34,6 +35,8 @@ const LogViewer = (() => {
   }
 
   async function loadFile(logFileId, projectId) {
+    _generation++;
+    _loading = false;
     _logFileId = logFileId;
     _projectId = projectId;
     _entries = [];
@@ -51,6 +54,8 @@ const LogViewer = (() => {
 
   async function applyFilters() {
     if (!_logFileId) return;
+    _generation++;
+    _loading = false;
     _entries = [];
     _total = 0;
     _offset = 0;
@@ -75,13 +80,13 @@ const LogViewer = (() => {
   async function _fetchAndAppend(offset) {
     if (_loading) return;
     _loading = true;
+    const gen = _generation;   // capture generation at fetch start
     try {
       const levels = _activeLevels.size < 6 ? [..._activeLevels] : null;
       const hasStackTrace = _activeFilters.stackOnly ? true : null;
 
       let data;
       if (_activeFilters.search || levels || hasStackTrace || _activeFilters.errorsOnly) {
-        // Use filter endpoint
         const filterLevels = _activeFilters.errorsOnly ? ['ERROR','FATAL'] : levels;
         const body = {
           levels: filterLevels || null,
@@ -96,12 +101,15 @@ const LogViewer = (() => {
         data = await api.getLogEntries(_projectId, _logFileId, offset, PAGE_SIZE);
       }
 
+      // Discard results if a reset/load happened while this fetch was in flight
+      if (gen !== _generation) return;
+
       _entries = [..._entries, ...data.entries];
       _total = data.total;
       _offset = offset + data.entries.length;
       _renderEntries();
     } catch(e) {
-      Toast.error('Failed to load log entries: ' + e.message);
+      if (gen === _generation) Toast.error('Failed to load log entries: ' + e.message);
     } finally {
       _loading = false;
     }
@@ -323,5 +331,28 @@ const LogViewer = (() => {
 
   document.addEventListener('DOMContentLoaded', () => initFilterBar());
 
-  return { loadFile, applyFilters, closeDetail, filterByCorrelation };
+  function reset() {
+    _generation++;            // invalidate any in-flight fetches
+    _loading = false;         // unblock future fetches
+    _logFileId = null;
+    _projectId = null;
+    _entries = [];
+    _total = 0;
+    _offset = 0;
+    _selectedIndex = null;
+    _expandedIndices.clear();
+    _activeLevels = new Set(['FATAL','ERROR','WARN','INFO','DEBUG','TRACE']);
+    _activeFilters = { levels: null, search: '', regex: false, errorsOnly: false, stackOnly: false };
+    closeDetail();
+    _clearInner();
+    _showLoading(false);
+    _updateStats();
+    // Reset filter bar UI
+    document.querySelectorAll('.level-toggle').forEach(btn => btn.classList.add('active'));
+    const s = document.getElementById('filter-search'); if (s) s.value = '';
+    const e = document.getElementById('filter-errors-only'); if (e) e.checked = false;
+    const t = document.getElementById('filter-stack-only'); if (t) t.checked = false;
+  }
+
+  return { loadFile, applyFilters, closeDetail, filterByCorrelation, reset };
 })();
