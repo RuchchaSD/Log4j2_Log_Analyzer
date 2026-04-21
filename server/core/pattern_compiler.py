@@ -2,17 +2,19 @@
 Convert log4j2 layout patterns to Python regex patterns.
 
 Supported directives:
-  %d / %d{...}        → timestamp
-  %p / %5p / %-5p     → level
-  %c / %c{n}          → logger (full name)
-  %C                  → class name (mapped to logger)
-  %t                  → thread
-  %m                  → message
-  %ex / %n            → skipped (stack traces handled by parser)
-  %X{correlationId}   → correlation_id
-  %X{tenantDomain}    → tenant_domain
-  [%tenantId]         → tid  (WSO2 custom)
-  [%appName]          → app_name  (WSO2 custom)
+  %d / %d{...}              → timestamp
+  %p / %5p / %-5p           → level
+  %c / %c{n}                → logger (full name)
+  %C                        → class name (mapped to logger)
+  %t / %T                   → thread / thread-id
+  %m                        → message
+  %ex / %n                  → skipped (stack traces handled by parser)
+  %X{correlationId}         → correlation_id  (also Correlation-ID)
+  %X{tenantDomain}          → tenant_domain
+  %X{apiName}               → app_name
+  %X{ip} / %X{host}         → skipped (no LogEntry field)
+  [%tenantId]               → tid  (WSO2 custom)
+  [%appName]                → app_name  (WSO2 custom)
 
 Literal characters are escaped; whitespace sequences become \\s*.
 """
@@ -38,10 +40,10 @@ _FIELD_MAP: dict[str, tuple[str, str]] = {
     'c':        ('logger',          r'[^\s\{\}\[\]]+'),
     # class name → treated as logger
     'class':    ('logger',          r'[^\s\{\}\[\]]+'),
-    # thread
-    't':        ('thread',          r'[^\s\[\]]+'),
-    'thread':   ('thread',          r'[^\s\[\]]+'),
-    'tn':       ('thread',          r'[^\s\[\]]+'),
+    # thread / thread-id (%T is numeric thread ID, treated same as thread name)
+    't':        ('thread',          r'[^\s\[\]|]+'),
+    'thread':   ('thread',          r'[^\s\[\]|]+'),
+    'tn':       ('thread',          r'[^\s\[\]|]+'),
     # message (greedy, dotall applied at compile time)
     'm':        ('message',         r'.*'),
     'msg':      ('message',         r'.*'),
@@ -51,15 +53,19 @@ _FIELD_MAP: dict[str, tuple[str, str]] = {
     'appname':  ('app_name',        r'[^\]]*'),
 }
 
-# MDC keys → LogEntry field
+# MDC keys → LogEntry field  (keys are lowercased before lookup)
 _MDC_FIELD_MAP: dict[str, str] = {
-    'correlationid':  'correlation_id',
-    'correlation_id': 'correlation_id',
-    'correlationid':  'correlation_id',
-    'tenantdomain':   'tenant_domain',
-    'tenant_domain':  'tenant_domain',
-    'tenant.domain':  'tenant_domain',
+    'correlationid':   'correlation_id',
+    'correlation_id':  'correlation_id',
+    'correlation-id':  'correlation_id',   # APIM correlation.log header
+    'tenantdomain':    'tenant_domain',
+    'tenant_domain':   'tenant_domain',
+    'tenant.domain':   'tenant_domain',
+    'apiname':         'app_name',          # APIM api.log %X{apiName}
 }
+
+# MDC keys that have no LogEntry field — matched but discarded
+_MDC_SKIP = {'ip', 'host'}
 
 # Directives to silently skip (stack trace / newline)
 _SKIP = {'ex', 'exception', 'throwable', 'xex', 'n', 'newline', 'rEx', 'xEx'.lower()}
@@ -99,14 +105,18 @@ def compile_pattern(pattern: str) -> tuple[Optional[re.Pattern], dict[str, str]]
 
             if name == 'x':
                 # MDC: %X{key}
-                entry_field = _MDC_FIELD_MAP.get(option.lower())
+                key = option.lower()
+                if key in _MDC_SKIP:
+                    regex_parts.append(r'(?:[^\s|,}]*)')
+                    continue
+                entry_field = _MDC_FIELD_MAP.get(key)
                 if entry_field and entry_field not in used_fields:
                     group = entry_field.replace('.', '_').replace('-', '_')
-                    regex_parts.append(f'(?P<{group}>[^\\s,}}]*)')
+                    regex_parts.append(f'(?P<{group}>[^\\s|,}}]*)')
                     field_map[group] = entry_field
                     used_fields.add(entry_field)
                 else:
-                    regex_parts.append(r'(?:[^\s,}]*)')
+                    regex_parts.append(r'(?:[^\s|,}]*)')
                 continue
 
             mapping = _FIELD_MAP.get(name)

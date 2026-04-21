@@ -410,3 +410,117 @@ def test_project_default_format_applied(client_with_isolated_formats, project_pa
         client_with_isolated_formats, proj["id"], "app.log", BRACKET_LOG
     ).json()
     assert uploaded["format_type_id"] == "builtin-bracket"
+
+
+# ── Sprint 2.6 — New built-ins and create-project-with-settings ───────────────
+
+APIM_AUDIT_LINE = (
+    "TID: [0] [2024-03-15 09:01:06,012]  INFO "
+    "{org.wso2.carbon.user.core.audit.AuditLogger} - Initiator: admin"
+)
+APIM_TRACE_LINE = (
+    "[2024-03-15 09:01:06,012] [0]  INFO "
+    "{org.wso2.carbon.mediation.Tracer} - Trace message"
+)
+APIM_API_LOG_LINE = (
+    "[2024-03-15 09:01:06,012]  INFO "
+    "{org.wso2.carbon.apimgt.gateway.handlers.security.APIKeyValidator} PizzaShackAPI "
+    "- Key validation started"
+)
+CORRELATION_LINE = (
+    "2024-03-15 09:01:06,012|abc123-def456|http-nio-9443-exec-1"
+    "|HTTP-In-1|GET|/api/v1/resource|1234|200|1ms"
+)
+APIM_GOV_AUDIT_LINE = (
+    "ThreadID: [123] TenantID: [0] [2024-03-15 09:01:06,012]  INFO "
+    "{org.wso2.carbon.apimgt.governance.rest.api.impl.ApisApiServiceImpl} "
+    "- Governance audit event"
+)
+ERROR_DIAG_LINE = (
+    "2024-03-15T09:01:06,012 [127.0.0.1-localhost] [pool-1-thread-1]  ERROR "
+    "{org.wso2.carbon.core.init.CarbonServerManager} Startup failed"
+)
+
+
+def test_new_builtins_present(client_with_isolated_formats):
+    """All Sprint 2.6 built-ins appear in the format list."""
+    formats = client_with_isolated_formats.get("/api/formats").json()["formats"]
+    ids = {f["id"] for f in formats}
+    for expected in [
+        "builtin-apim-audit",
+        "builtin-apim-api-log",
+        "builtin-apim-trace",
+        "builtin-correlation",
+        "builtin-apim-gov-audit",
+        "builtin-error-diag",
+    ]:
+        assert expected in ids, f"{expected} missing from built-in list"
+
+
+def test_apim_audit_pattern_matches():
+    regex, _ = compile_pattern("TID: [%tenantId] [%d] %5p {%c} - %m%ex%n")
+    assert regex is not None
+    assert regex.match(APIM_AUDIT_LINE) is not None
+
+
+def test_apim_trace_pattern_matches():
+    regex, _ = compile_pattern("[%d] [%tenantId] %5p {%c} - %m%ex%n")
+    assert regex is not None
+    assert regex.match(APIM_TRACE_LINE) is not None
+
+
+def test_apim_api_log_pattern_matches():
+    regex, field_map = compile_pattern("[%d] %5p {%c} %X{apiName} - %m%ex%n")
+    assert regex is not None
+    m = regex.match(APIM_API_LOG_LINE)
+    assert m is not None
+    assert m.group('app_name') == 'PizzaShackAPI'
+
+
+def test_correlation_pattern_matches():
+    regex, field_map = compile_pattern("%d{yyyy-MM-dd HH:mm:ss,SSS}|%X{Correlation-ID}|%t|%m%n")
+    assert regex is not None
+    m = regex.match(CORRELATION_LINE)
+    assert m is not None
+    assert m.group('correlation_id') == 'abc123-def456'
+    assert m.group('thread') == 'http-nio-9443-exec-1'
+
+
+def test_apim_gov_audit_pattern_matches():
+    regex, _ = compile_pattern(
+        "ThreadID: [%T] TenantID: [%tenantId] [%d] %5p {%c} - %m%ex%n"
+    )
+    assert regex is not None
+    assert regex.match(APIM_GOV_AUDIT_LINE) is not None
+
+
+def test_error_diag_pattern_matches():
+    regex, _ = compile_pattern(
+        "%d{ISO8601} [%X{ip}-%X{host}] [%t] %5p {%c} %m%n"
+    )
+    assert regex is not None
+    m = regex.match(ERROR_DIAG_LINE)
+    assert m is not None
+    assert m.group('level').strip() == 'ERROR'
+
+
+def test_create_project_with_default_format(client, project_payload):
+    """POST /api/projects with settings.defaultFormatTypeId stores it."""
+    payload = dict(project_payload)
+    payload["name"] = "FmtDefaultTest"
+    payload["settings"] = {"defaultFormatTypeId": "builtin-tid"}
+    r = client.post("/api/projects", json=payload)
+    assert r.status_code == 201
+    proj = r.json()
+    assert proj["settings"]["defaultFormatTypeId"] == "builtin-tid"
+
+
+def test_create_project_default_format_applied_on_upload(client, project_payload, tmp_path):
+    """When project has defaultFormatTypeId set at create time, uploads pick it up."""
+    payload = dict(project_payload)
+    payload["name"] = "FmtOnCreate"
+    payload["settings"] = {"defaultFormatTypeId": "builtin-bracket"}
+    proj = client.post("/api/projects", json=payload).json()
+
+    uploaded = _upload(client, proj["id"], "app.log", BRACKET_LOG).json()
+    assert uploaded["format_type_id"] == "builtin-bracket"

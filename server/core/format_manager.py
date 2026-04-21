@@ -15,27 +15,88 @@ from server.config import LOG_FORMATS_FILE
 # ── Built-in formats ──────────────────────────────────────────────────────────
 
 _BUILTINS: list[LogFormatType] = [
+    # ── APIM / IS ─────────────────────────────────────────────────────────────
     LogFormatType(
         id="builtin-tid",
-        name="APIM / IS Carbon (TID format)",
+        name="APIM / IS — Carbon log (TID)",
         pattern="TID: [%tenantId] [%appName] [%d] %5p {%c} - %m%ex%n",
-        description="WSO2 API Manager and Identity Server — Carbon log in TID format (most common)",
+        description="wso2carbon.log for API Manager and Identity Server (all versions). "
+                    "Extracted from APIM 3.2.0 – 4.6.0 log4j2.properties.",
         product="apim",
         is_builtin=True,
     ),
     LogFormatType(
+        id="builtin-apim-audit",
+        name="APIM / IS — Audit log",
+        pattern="TID: [%tenantId] [%d] %5p {%c} - %m%ex%n",
+        description="audit.log for API Manager and Identity Server — same as TID but without appName. "
+                    "Extracted from APIM 3.2.0 – 4.6.0 log4j2.properties.",
+        product="apim",
+        is_builtin=True,
+    ),
+    LogFormatType(
+        id="builtin-apim-api-log",
+        name="APIM — API log",
+        pattern="[%d] %5p {%c} %X{apiName} - %m%ex%n",
+        description="api.log for API Manager 4.1.0+. Includes apiName MDC context. "
+                    "Extracted from APIM 4.1.0 – 4.6.0 log4j2.properties.",
+        product="apim",
+        is_builtin=True,
+    ),
+    LogFormatType(
+        id="builtin-apim-trace",
+        name="APIM / IS — Atomikos / Trace log",
+        pattern="[%d] [%tenantId] %5p {%c} - %m%ex%n",
+        description="tm.log (Atomikos), trace logs, and bot-data logs. "
+                    "Extracted from APIM 3.2.0 – 4.6.0 log4j2.properties.",
+        product="apim",
+        is_builtin=True,
+    ),
+    LogFormatType(
+        id="builtin-apim-gov-audit",
+        name="APIM — Governance audit log (4.5.0+)",
+        pattern="ThreadID: [%T] TenantID: [%tenantId] [%d] %5p {%c} - %m%ex%n",
+        description="wso2-apim-gov-audit.log introduced in API Manager 4.5.0. "
+                    "Extracted from APIM 4.5.0 – 4.6.0 log4j2.properties.",
+        product="apim",
+        is_builtin=True,
+    ),
+    # ── MI / EI ───────────────────────────────────────────────────────────────
+    LogFormatType(
         id="builtin-bracket",
-        name="MI / EI Carbon (bracket format)",
+        name="MI / EI — Carbon log (bracket)",
         pattern="[%d] %5p {%c} - %m%ex%n",
-        description="WSO2 Micro Integrator and Enterprise Integrator — Carbon log in bracket format",
+        description="wso2carbon.log, audit.log, wso2-mi-service.log, wso2-mi-api.log for "
+                    "Micro Integrator and Enterprise Integrator (all versions). "
+                    "Extracted from MI 4.1.0 – 4.5.0 log4j2.properties.",
         product="mi",
         is_builtin=True,
     ),
+    # ── Shared ────────────────────────────────────────────────────────────────
+    LogFormatType(
+        id="builtin-correlation",
+        name="Correlation log (pipe-delimited)",
+        pattern="%d{yyyy-MM-dd HH:mm:ss,SSS}|%X{Correlation-ID}|%t|%m%n",
+        description="correlation.log for APIM and IS — pipe-delimited with correlationId and thread. "
+                    "Extracted from APIM 3.2.0 – 4.6.0 log4j2.properties.",
+        product="apim",
+        is_builtin=True,
+    ),
+    LogFormatType(
+        id="builtin-error-diag",
+        name="Error / Diagnostics log",
+        pattern="%d{ISO8601} [%X{ip}-%X{host}] [%t] %5p {%c} %m%n",
+        description="wso2error.log and diagnostics-tool logs for APIM 4.3.0+. "
+                    "Extracted from APIM 4.3.0 – 4.6.0 log4j2.properties.",
+        product="apim",
+        is_builtin=True,
+    ),
+    # ── Generic ───────────────────────────────────────────────────────────────
     LogFormatType(
         id="builtin-basic",
         name="Basic Carbon (generic fallback)",
         pattern="%d %5p [%c] - %m%ex%n",
-        description="Basic Carbon log format — used as auto-detection fallback",
+        description="Basic Carbon log format — used as auto-detection fallback.",
         product="generic",
         is_builtin=True,
     ),

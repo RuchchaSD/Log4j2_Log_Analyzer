@@ -30,7 +30,8 @@ const ProjectManager = {
   },
 
   // ── Create project modal ───────────────────────────────────────────────────
-  showCreateProjectModal() {
+  async showCreateProjectModal() {
+    const fmtSelect = await _buildProjectFormatSelect(null, null);
     const body = `
       <div class="form-grid">
         <div class="form-group form-grid-full">
@@ -39,7 +40,7 @@ const ProjectManager = {
         </div>
         <div class="form-group">
           <label class="form-label">Product <span class="required">*</span></label>
-          <select id="cp-product" class="form-select">
+          <select id="cp-product" class="form-select" onchange="ProjectManager._onProductChange()">
             <option value="">Select product…</option>
             <option value="apim">API Manager (APIM)</option>
             <option value="is">Identity Server (IS)</option>
@@ -50,6 +51,11 @@ const ProjectManager = {
         <div class="form-group">
           <label class="form-label">Version <span class="required">*</span></label>
           <input id="cp-version" class="form-input" type="text" placeholder="e.g. 4.3.0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Log Format</label>
+          <div id="cp-format-wrapper">${fmtSelect}</div>
+          <span class="form-hint">Applied when loading log files without an explicit format assigned</span>
         </div>
         <div class="form-group">
           <label class="form-label">U2 Level</label>
@@ -73,6 +79,15 @@ const ProjectManager = {
     Modal.show('New Project', body, footer);
   },
 
+  // Auto-suggest default format when product changes
+  _onProductChange() {
+    const product = document.getElementById('cp-product').value;
+    const sel = document.querySelector('#cp-format-wrapper select');
+    if (!sel) return;
+    const suggest = { apim: 'builtin-tid', is: 'builtin-tid', mi: 'builtin-bracket', ei: 'builtin-bracket' }[product];
+    if (suggest) sel.value = suggest;
+  },
+
   // ── Create project ─────────────────────────────────────────────────────────
   async createProject() {
     const name    = document.getElementById('cp-name').value.trim();
@@ -81,6 +96,8 @@ const ProjectManager = {
     const path    = document.getElementById('cp-path').value.trim();
     const u2Level = document.getElementById('cp-u2').value.trim() || undefined;
     const install = document.getElementById('cp-install').value.trim() || undefined;
+    const fmtSel  = document.querySelector('#cp-format-wrapper select');
+    const defaultFormatTypeId = fmtSel ? (fmtSel.value || null) : null;
 
     if (!name)    { Toast.error('Project name is required'); return; }
     if (!product) { Toast.error('Please select a product'); return; }
@@ -95,6 +112,7 @@ const ProjectManager = {
       const project = await api.createProject({
         name, product, productVersion: version, path,
         u2Level, installPath: install,
+        settings: { defaultFormatTypeId },
       });
       Modal.hide();
       Toast.success(`Project "${project.name}" created successfully`);
@@ -105,6 +123,76 @@ const ProjectManager = {
       Toast.error(`Failed to create project: ${err.message}`);
       createBtn.disabled = false;
       createBtn.innerHTML = 'Create Project';
+    }
+  },
+
+  // ── Edit project modal ─────────────────────────────────────────────────────
+  async showEditProjectModal(project) {
+    const currentFmt = project.settings?.defaultFormatTypeId || null;
+    const fmtSelect  = await _buildProjectFormatSelect(currentFmt, null);
+    const body = `
+      <div class="form-grid">
+        <div class="form-group form-grid-full">
+          <label class="form-label">Project Name <span class="required">*</span></label>
+          <input id="ep-name" class="form-input" type="text" value="${_esc(project.name)}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Version</label>
+          <input id="ep-version" class="form-input" type="text" value="${_esc(project.productVersion)}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Log Format</label>
+          <div id="ep-format-wrapper">${fmtSelect}</div>
+          <span class="form-hint">Applied when loading log files without an explicit format assigned</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">U2 Level</label>
+          <input id="ep-u2" class="form-input" type="text" value="${_esc(project.u2Level || '')}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Install Path</label>
+          <input id="ep-install" class="form-input" type="text" value="${_esc(project.installPath || '')}" />
+        </div>
+      </div>`;
+
+    const footer = `
+      <button class="btn btn-ghost" onclick="Modal.hide()">Cancel</button>
+      <button class="btn btn-primary" onclick="ProjectManager.saveEditProject('${project.id}')">Save Changes</button>`;
+
+    Modal.show('Edit Project', body, footer);
+  },
+
+  // ── Save edit project ──────────────────────────────────────────────────────
+  async saveEditProject(projectId) {
+    const name    = document.getElementById('ep-name').value.trim();
+    const version = document.getElementById('ep-version').value.trim();
+    const u2Level = document.getElementById('ep-u2').value.trim() || null;
+    const install = document.getElementById('ep-install').value.trim() || null;
+    const fmtSel  = document.querySelector('#ep-format-wrapper select');
+    const defaultFormatTypeId = fmtSel ? (fmtSel.value || null) : null;
+
+    if (!name) { Toast.error('Project name is required'); return; }
+
+    const saveBtn = document.querySelector('#modal-footer .btn-primary');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<div class="spinner spinner-sm"></div> Saving…';
+
+    try {
+      const updated = await api.updateProject(projectId, {
+        name,
+        productVersion: version || undefined,
+        u2Level,
+        installPath: install,
+        settings: { defaultFormatTypeId },
+      });
+      Modal.hide();
+      Toast.success('Project updated');
+      App.setCurrentProject(updated);
+      ProjectManager.renderRecentProjects();
+    } catch (err) {
+      Toast.error(`Failed to save: ${err.message}`);
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = 'Save Changes';
     }
   },
 
@@ -188,12 +276,19 @@ const ProjectManager = {
 function _projectCard(p) {
   const productLabel = { apim: 'API Manager', is: 'Identity Server', mi: 'Micro Integrator', ei: 'Enterprise Integrator' }[p.product] || p.product.toUpperCase();
   const date = new Date(p.updated || p.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const pJson = JSON.stringify(p).replace(/"/g, '&quot;');
 
   return `
-    <div class="project-card" onclick="ProjectManager.openProject(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+    <div class="project-card" onclick="ProjectManager.openProject(${pJson})">
       <div class="project-card-header">
         <div class="project-card-title">${_esc(p.name)}</div>
         <div class="project-card-actions">
+          <button class="btn btn-icon" title="Edit project"
+                  onclick="event.stopPropagation(); ProjectManager.showEditProjectModal(${pJson})">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+            </svg>
+          </button>
           <button class="btn btn-icon btn-danger" title="Delete project"
                   onclick="event.stopPropagation(); ProjectManager.deleteProject('${p.id}', '${_esc(p.name)}')">
             <svg viewBox="0 0 20 20" fill="currentColor">
@@ -219,4 +314,23 @@ function _esc(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+async function _buildProjectFormatSelect(selectedId, _unused) {
+  let formats = [];
+  try {
+    const data = await api.listFormats();
+    formats = data.formats || [];
+  } catch (_) {}
+
+  const opts = formats.map(f => {
+    const sel = selectedId === f.id ? ' selected' : '';
+    const label = f.is_builtin ? f.name : `${f.name} (custom)`;
+    return `<option value="${_esc(f.id)}"${sel}>${_esc(label)}</option>`;
+  }).join('');
+
+  return `<select id="project-default-format" class="form-select">
+    <option value="">— None (auto-detect) —</option>
+    ${opts}
+  </select>`;
 }

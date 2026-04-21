@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from server.models.project import Project, ProjectCreate, ProjectUpdate
+from server.models.project import Project, ProjectCreate, ProjectUpdate, ProjectSettings
 from server.config import ANALYZER_DIR_NAME, RECENTS_FILE, MAX_RECENT_PROJECTS
 
 
@@ -24,6 +24,7 @@ def create_project(data: ProjectCreate) -> Project:
         u2Level=data.u2Level,
         installPath=data.installPath,
         path=str(project_dir),
+        settings=data.settings or ProjectSettings(),
     )
     _save_project(project)
     _add_to_recents(project)

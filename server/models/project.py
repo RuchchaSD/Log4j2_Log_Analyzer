@@ -37,6 +37,7 @@ class ProjectCreate(BaseModel):
     path: str  # where to create the project folder
     u2Level: Optional[str] = None
     installPath: Optional[str] = None
+    settings: Optional[ProjectSettings] = None
 
 
 class ProjectUpdate(BaseModel):
