@@ -44,6 +44,8 @@ const App = {
       LogManager.renderLogFiles();
     } else if (tabName === 'settings') {
       FormatManager.renderFormatList();
+    } else if (tabName === 'repos') {
+      RepoManager.renderRepoList();
     }
   },
 
@@ -78,7 +80,7 @@ const App = {
   // ── Enable / disable tabs based on project state ──────────────────────────
   _updateTabAccess() {
     const hasProject = !!App.state.currentProject;
-    const tabsRequiringProject = ['logs', 'analytics', 'repos', 'ai'];
+    const tabsRequiringProject = ['logs', 'analytics', 'ai'];
 
     tabsRequiringProject.forEach(tab => {
       const btn = document.querySelector(`.nav-item[data-tab="${tab}"]`);

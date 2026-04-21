@@ -1,0 +1,500 @@
+{
+  "_comment": "Maps feature keywords to GitHub repository names. Add entries as the team discovers new mappings. Repo names must match entries in repos.json values.",
+
+  "oauth2": [
+    "identity-inbound-auth-oauth",
+    "carbon-identity-framework",
+    "identity-oauth2-grant-token-exchange",
+    "identity-oauth-privatekey-jwthandler",
+    "identity-oauth2-grant-jwt",
+    "identity-oauth-addons",
+    "identity-oauth-uma",
+    "identity-data-publisher-oauth",
+    "identity-oauth2-grant-organization-switch",
+    "identity-outbound-auth-oauth2",
+    "identity-outbound-auth-requestpath-oauth"
+  ],
+  "oauth": [
+    "identity-inbound-auth-oauth",
+    "carbon-identity-framework",
+    "identity-oauth2-grant-token-exchange",
+    "identity-oauth-privatekey-jwthandler",
+    "identity-oauth2-grant-jwt",
+    "identity-oauth-addons",
+    "identity-oauth-uma",
+    "identity-data-publisher-oauth",
+    "identity-oauth2-grant-organization-switch",
+    "identity-outbound-auth-oauth2",
+    "identity-outbound-auth-requestpath-oauth"
+  ],
+  "token": [
+    "identity-inbound-auth-oauth"
+  ],
+  "token-expiry": [
+    "identity-inbound-auth-oauth"
+  ],
+  "token-revocation": [
+    "identity-inbound-auth-oauth"
+  ],
+  "token-introspection": [
+    "identity-inbound-auth-oauth"
+  ],
+  "oidc": [
+    "identity-inbound-auth-oauth",
+    "carbon-identity-framework",
+    "identity-outbound-auth-oauth2"
+  ],
+  "saml": [
+    "identity-inbound-auth-saml",
+    "identity-outbound-auth-samlsso",
+    "identity-metadata-saml2",
+    "identity-carbon-auth-saml2",
+    "carbon-identity-saml-common"
+  ],
+  "saml2": [
+    "identity-inbound-auth-saml",    
+    "identity-outbound-auth-samlsso",
+    "identity-metadata-saml2",
+    "identity-carbon-auth-saml2",
+    "carbon-identity-saml-common"
+  ],
+  "authentication": [
+    "carbon-identity-framework",
+    "identity-local-auth-basicauth"
+  ],
+  "authenticator": [
+    "carbon-identity-framework",
+    "identity-local-auth-basicauth",
+    "identity-local-auth-fido",
+    "identity-local-auth-smsotp",
+    "identity-local-auth-emailotp",
+    "identity-local-auth-magiclink",
+    "identity-local-auth-push"
+  ],
+  "step-authentication": [
+    "carbon-identity-framework"
+  ],
+  "adaptive-authentication": [
+    "carbon-identity-framework"
+  ],
+  "conditional-authentication": [
+    "carbon-identity-framework"
+  ],
+  "session": [
+    "carbon-identity-framework"
+  ],
+  "session-management": [
+    "carbon-identity-framework"
+  ],
+  "user-management": [
+    "carbon-kernel",
+    "carbon-identity-framework",
+    "identity-inbound-provisioning-scim2"
+  ],
+  "user-store": [
+    "carbon-kernel",
+    "carbon-identity-framework"
+  ],
+  "ldap": [
+    "carbon-kernel"
+  ],
+  "active-directory": [
+    "carbon-kernel"
+  ],
+  "claim": [
+    "carbon-identity-framework"
+  ],
+  "claim-management": [
+    "carbon-identity-framework"
+  ],
+  "role": [
+    "carbon-identity-framework",
+    "carbon-kernel"
+  ],
+  "role-management": [
+    "carbon-identity-framework",
+    "carbon-kernel"
+  ],
+  "permission": [
+    "carbon-identity-framework",
+    "carbon-kernel"
+  ],
+  "authorization": [
+    "carbon-identity-framework"
+  ],
+  "consent": [
+    "carbon-identity-framework",
+    "identity-inbound-auth-oauth",
+    "carbon-consent-management"
+  ],
+  "consent-management": [
+    "carbon-identity-framework",
+    "carbon-consent-management"
+  ],
+  "identity-provider": [
+    "carbon-identity-framework"
+  ],
+  "idp": [
+    "carbon-identity-framework"
+  ],
+  "federated-authentication": [
+    "carbon-identity-framework"
+  ],
+  "service-provider": [
+    "carbon-identity-framework"
+  ],
+  "application-management": [
+    "carbon-identity-framework"
+  ],
+  "cors": [
+    "identity-inbound-auth-oauth",
+    "carbon-identity-framework"
+  ],
+  "jwks": [
+    "identity-inbound-auth-oauth"
+  ],
+  "jwt": [
+    "identity-inbound-auth-oauth"
+  ],
+  "pkce": [
+    "identity-inbound-auth-oauth"
+  ],
+  "par": [
+    "identity-inbound-auth-oauth"
+  ],
+  "pushed-authorization": [
+    "identity-inbound-auth-oauth"
+  ],
+  "dcr": [
+    "identity-inbound-auth-oauth"
+  ],
+  "dynamic-client-registration": [
+    "identity-inbound-auth-oauth"
+  ],
+  "fido": [
+    "identity-local-auth-fido"
+  ],
+  "fido2": [
+    "identity-local-auth-fido"
+  ],
+  "passkey": [
+    "identity-local-auth-fido"
+  ],
+  "webauthn": [
+    "identity-local-auth-fido"
+  ],
+  "totp": [
+    "identity-local-auth-totp",
+    "identity-outbound-auth-totp"
+  ],
+  "otp": [
+    "identity-local-auth-totp",
+    "identity-outbound-auth-sms-otp"
+  ],
+  "sms-otp": [
+    "identity-local-auth-smsotp",
+    "identity-outbound-auth-sms-otp",
+    "identity-event-handler-notification",
+    "carbon-analytics-common"
+  ],
+  "email-otp": [
+    "identity-local-auth-emailotp",
+    "identity-outbound-auth-email-otp",
+    "identity-event-handler-notification",
+    "carbon-analytics-common"
+  ],
+  "magic-link": [
+    "identity-local-auth-magiclink"
+  ],
+  "scim": [
+    "identity-inbound-provisioning-scim",
+    "charon",
+    "carbon-kernel",
+    "identity-outbound-provisioning-scim"
+  ],
+  "scim2": [
+    "identity-inbound-provisioning-scim2",
+    "charon",
+    "carbon-kernel",
+    "identity-outbound-provisioning-scim2"
+  ],
+  "provisioning": [
+    "carbon-identity-framework",
+    "identity-inbound-provisioning-scim2",
+    "identity-inbound-provisioning-scim",
+    "identity-outbound-provisioning-scim2",
+    "identity-outbound-provisioning-google",
+    "identity-outbound-provisioning-scim"
+
+  ],
+  "password-policy": [
+    "identity-governance",
+    "identity-outbound-auth-passwordPolicy"
+  ],
+  "account-lock": [
+    "identity-local-auth-basicauth",
+    "identity-governance",
+    "identity-event-handler-account-lock"
+  ],
+  "account-recovery": [
+    "carbon-identity-framework",
+    "identity-governance"
+  ],
+  "self-registration": [
+    "carbon-identity-framework"
+  ],
+  "email-confirmation": [
+    "carbon-identity-framework"
+  ],
+  "notification": [
+    "carbon-identity-framework",
+    "identity-event-handler-notification",
+    "carbon-analytics-common"
+  ],
+  "event": [
+    "carbon-identity-framework",
+    "identity-governance"
+  ],
+  "audit-log": [
+    "carbon-identity-framework",
+    "carbon-kernel"
+  ],
+  "keystore": [
+    "carbon-kernel"
+  ],
+  "certificate": [
+    "carbon-kernel",
+    "carbon-identity-framework"
+  ],
+  "cors-filter": [
+    "carbon-identity-framework"
+  ],
+  "rest-api": [
+    "identity-api-server"
+  ],
+  "management-api": [
+    "identity-api-server"
+  ],
+  "api": [
+    "carbon-apimgt"
+  ],
+  "api-management": [
+    "carbon-apimgt"
+  ],
+  "api-gateway": [
+    "carbon-apimgt"
+  ],
+  "api-publisher": [
+    "carbon-apimgt",
+    "product-apim"
+  ],
+  "api-devportal": [
+    "carbon-apimgt",
+    "product-apim"
+  ],
+  "api-store": [
+    "carbon-apimgt",
+    "product-apim"
+  ],
+  "api-admin": [
+    "carbon-apimgt"
+  ],
+  "api-lifecycle": [
+    "carbon-apimgt"
+  ],
+  "throttling": [
+    "carbon-apimgt"
+  ],
+  "rate-limiting": [
+    "carbon-apimgt"
+  ],
+  "subscription": [
+    "carbon-apimgt"
+  ],
+  "key-management": [
+    "carbon-apimgt",
+    "apim-km-wso2is"
+  ],
+  "key-manager": [
+    "carbon-apimgt",
+    "apim-km-wso2is"
+  ],
+  "apim-jwt": [
+    "carbon-apimgt",
+    "apim-km-wso2is"
+  ],
+  "token-management": [
+    "carbon-apimgt",
+    "apim-km-wso2is"
+  ],
+  "api-analytics": [
+    "carbon-apimgt",
+    "apim-analytics-publisher"
+  ],
+  "api-policy": [
+    "carbon-apimgt",
+    "apim-policies"
+  ],
+  "ai-api": [
+    "carbon-apimgt",
+    "apim-policies"
+  ],
+  "ai-gateway": [
+    "carbon-apimgt",
+    "apim-policies"
+  ],
+  "ai-guardrail": [
+    "apim-policies"
+  ],
+  "governance": [
+    "carbon-apimgt",
+    "carbon-governance"
+  ],
+  "api-governance": [
+    "carbon-apimgt"
+  ],
+  "graphql": [
+    "carbon-apimgt"
+  ],
+  "websocket-api": [
+    "carbon-apimgt",
+    "carbon-mediation"
+  ],
+  "streaming-api": [
+    "carbon-apimgt",
+    "carbon-mediation"
+  ],
+  "eventing": [
+    "carbon-apimgt"
+  ],
+  "federated-gateway": [
+    "carbon-apimgt"
+  ],
+  "solace": [
+    "carbon-apimgt"
+  ],
+  "apim-tracing": [
+    "carbon-apimgt"
+  ],
+  "apim-multitenancy": [
+    "carbon-apimgt",
+    "product-apim"
+  ],
+  "message-broker": [
+    "carbon-business-messaging",
+    "andes"
+  ],
+  "andes": [
+    "andes",
+    "carbon-business-messaging"
+  ],
+  "siddhi": [
+    "siddhi",
+    "carbon-event-processing"
+  ],
+  "event-processing": [
+    "carbon-event-processing",
+    "siddhi"
+  ],
+  "metrics": [
+    "carbon-metrics"
+  ],
+  "micro-integrator": [
+    "product-micro-integrator"
+  ],
+  "integration": [
+    "product-micro-integrator",
+    "carbon-mediation"
+  ],
+  "mediation": [
+    "carbon-mediation",
+    "wso2-synapse",
+    "product-micro-integrator"
+  ],
+  "synapse": [
+    "wso2-synapse",
+    "carbon-mediation"
+  ],
+  "proxy-service": [
+    "carbon-mediation",
+    "product-micro-integrator"
+  ],
+  "inbound-endpoint": [
+    "carbon-mediation",
+    "product-micro-integrator"
+  ],
+  "connector": [
+    "carbon-mediation"
+  ],
+  "datamapper": [
+    "carbon-mediation"
+  ],
+  "data-mapping": [
+    "carbon-mediation"
+  ],
+  "message-store": [
+    "carbon-mediation",
+    "product-micro-integrator"
+  ],
+  "message-processor": [
+    "carbon-mediation",
+    "product-micro-integrator"
+  ],
+  "sequence": [
+    "carbon-mediation"
+  ],
+  "endpoint-mi": [
+    "carbon-mediation"
+  ],
+  "rest-api-mi": [
+    "carbon-mediation",
+    "product-micro-integrator"
+  ],
+  "data-service": [
+    "product-micro-integrator"
+  ],
+  "xslt": [
+    "carbon-mediation"
+  ],
+  "cache-mediator": [
+    "carbon-mediation"
+  ],
+  "task-scheduling": [
+    "carbon-mediation"
+  ],
+  "smooks": [
+    "carbon-mediation"
+  ],
+  "vfs": [
+    "wso2-commons-vfs",
+    "carbon-mediation"
+  ],
+  "transport": [
+    "wso2-axis2-transports",
+    "transport-http",
+    "wso2-httpcore-nio"
+  ],
+  "http-transport": [
+    "transport-http",
+    "wso2-httpcore-nio"
+  ],
+  "jms-transport": [
+    "wso2-axis2-transports"
+  ],
+  "rabbitmq-transport": [
+    "wso2-axis2-transports"
+  ],
+  "mqtt-transport": [
+    "wso2-axis2-transports"
+  ],
+  "axis2": [
+    "wso2-axis2",
+    "wso2-axis2-transports"
+  ],
+  "axiom": [
+    "wso2-axiom"
+  ],
+  "secure-vault": [
+    "carbon-secvault"
+  ]
+}

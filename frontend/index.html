@@ -44,7 +44,7 @@
           </svg>
           <span>Analytics</span>
         </button>
-        <button class="nav-item" data-tab="repos" disabled>
+        <button class="nav-item" data-tab="repos">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
@@ -203,12 +203,19 @@
       <!-- Tab: Repos ─────────────────────────────────────────────────────── -->
       <section id="tab-repos" class="tab-content">
         <div class="page-header">
-          <h1 class="page-title">Repositories</h1>
+          <div>
+            <h1 class="page-title">Repositories</h1>
+            <p class="page-subtitle">Register local WSO2 repo checkouts to resolve stack frames to source code</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-ghost btn-sm" onclick="RepoManager.renderRepoList()">Refresh</button>
+            <button class="btn btn-primary" onclick="RepoManager.showAddRepoModal()">+ Register Repository</button>
+          </div>
         </div>
-        <div class="coming-soon-panel">
-          <div class="coming-soon-icon">⑃</div>
-          <h2>Repository Linking — Coming Soon</h2>
-          <p>Link source code repositories to correlate log lines with code.</p>
+        <div class="section-card">
+          <div id="repo-list" class="format-list">
+            <div class="loading-row"><div class="spinner"></div> Loading…</div>
+          </div>
         </div>
       </section>
 
@@ -279,6 +286,7 @@
   <script src="/static/js/components/toast.js?v=3"></script>
   <script src="/static/js/components/modal.js?v=3"></script>
   <script src="/static/js/format-manager.js?v=1"></script>
+  <script src="/static/js/repo-manager.js?v=1"></script>
   <script src="/static/js/project-manager.js?v=3"></script>
   <script src="/static/js/log-manager.js?v=5"></script>
   <script src="/static/js/log-viewer.js?v=3"></script>

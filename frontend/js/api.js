@@ -88,6 +88,38 @@ const api = {
   async testFormatPattern(pattern, line) {
     return _post('/api/formats/test', { pattern, line });
   },
+
+  // ── Repos (Sprint 3) ───────────────────────────────────────────────────────
+  async listRepos() {
+    return _get('/api/repos');
+  },
+  async createRepo(data) {
+    return _post('/api/repos', data);
+  },
+  async deleteRepo(id) {
+    return _delete(`/api/repos/${id}`);
+  },
+  async reindexRepo(id) {
+    return _post(`/api/repos/${id}/reindex`, {});
+  },
+  async repoStatus(id) {
+    return _get(`/api/repos/${id}/status`);
+  },
+  async resolveRepo(packageName) {
+    return _post('/api/repos/resolve', { packageName });
+  },
+  async listFeatures() {
+    return _get('/api/features');
+  },
+  async resolveStackTrace(stackTrace) {
+    return _post('/api/stacktrace/resolve', { stackTrace });
+  },
+  async readSource(path, line, context = 10) {
+    const params = new URLSearchParams({ path });
+    if (line != null) params.set('line', line);
+    params.set('context', context);
+    return _get(`/api/files/source?${params.toString()}`);
+  },
 };
 
 // ── HTTP helpers ─────────────────────────────────────────────────────────────

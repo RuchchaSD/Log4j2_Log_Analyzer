@@ -22,19 +22,33 @@ def temp_dir():
 
 @pytest.fixture
 def temp_home(tmp_path, monkeypatch):
-    """Override the home directory so recents.json goes to a temp location."""
+    """Override the home directory so analyzer state goes to a temp location."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
 
-    # Patch Path.home() to return our fake home
     import server.config as cfg
-    original_recents = cfg.RECENTS_FILE
-    cfg.RECENTS_FILE = fake_home / ".wso2analyzer" / "recents.json"
+    originals = {
+        "RECENTS_FILE": cfg.RECENTS_FILE,
+        "ANALYZER_HOME": cfg.ANALYZER_HOME,
+        "REPOS_REGISTRY_FILE": cfg.REPOS_REGISTRY_FILE,
+        "REPOS_CHECKOUT_DIR": cfg.REPOS_CHECKOUT_DIR,
+        "LOG_FORMATS_FILE": cfg.LOG_FORMATS_FILE,
+    }
+    analyzer_home = fake_home / ".wso2analyzer"
+    cfg.ANALYZER_HOME = analyzer_home
+    cfg.RECENTS_FILE = analyzer_home / "recents.json"
+    cfg.LOG_FORMATS_FILE = analyzer_home / "log_formats.json"
+    cfg.REPOS_REGISTRY_FILE = analyzer_home / "repos.json"
+    cfg.REPOS_CHECKOUT_DIR = analyzer_home / "repos"
 
     yield fake_home
 
-    cfg.RECENTS_FILE = original_recents
+    cfg.RECENTS_FILE = originals["RECENTS_FILE"]
+    cfg.ANALYZER_HOME = originals["ANALYZER_HOME"]
+    cfg.REPOS_REGISTRY_FILE = originals["REPOS_REGISTRY_FILE"]
+    cfg.REPOS_CHECKOUT_DIR = originals["REPOS_CHECKOUT_DIR"]
+    cfg.LOG_FORMATS_FILE = originals["LOG_FORMATS_FILE"]
 
 
 @pytest.fixture

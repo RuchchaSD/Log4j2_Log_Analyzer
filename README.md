@@ -15,6 +15,10 @@ A professional desktop-grade web application for analyzing WSO2 product logs (AP
 - **Cross-file search** — search across all loaded log files simultaneously
 - **Format manager UI** — Settings tab: create/edit/delete format types with inline pattern tester
 - **Dark-mode professional UI**
+- **Repository registration & stack trace resolution** *(S3)* — index local Java repos, click stack frames to jump to source with line snippets
+- **Package→repo resolver** — longest-prefix match against 750+ WSO2 package mappings ported from `cre-ai-agent`
+- **JAR version scanner** — derive `{artifactId: version}` from a WSO2 pack to resolve source at the correct tag
+- **Feature keyword catalog** — 500+ feature→repo mappings (`oauth2`, `saml`, `totp`, …) available via `/api/features`
 
 ## Quick Start
 
@@ -33,11 +37,13 @@ python run.py
 ```
 wso2-log-analyzer/
 ├── server/
-│   ├── api/            # REST endpoints (projects, logs, parsing, formats)
-│   ├── core/           # Business logic (parser, indexer, format_manager, pattern_compiler)
+│   ├── api/            # REST endpoints (projects, logs, parsing, formats, repos, stacktrace, files)
+│   ├── core/           # Business logic (parser, indexer, format_manager, pattern_compiler,
+│   │                   #                  repo_resolver, repo_scanner, stack_trace, git_client, repo_registry)
+│   ├── data/           # Seed configs from cre-ai-agent (repos.json, jar-overrides.json, features.json)
 │   └── models/         # Pydantic models
 ├── frontend/           # Vanilla JS/HTML/CSS SPA (no build step)
-└── tests/              # pytest test suite (134 tests)
+└── tests/              # pytest test suite (168 tests)
 ```
 
 ## Development
@@ -58,7 +64,7 @@ ruff check .
 | S2 — Core Log Viewer | ✅ Complete |
 | S2.5 — Log Format Types | ✅ Complete |
 | S2.6 — Format Library & Project Defaults | ✅ Complete |
-| S3 — Codebase Intelligence | ⏳ Not started |
+| S3 — Codebase Intelligence | ✅ Complete |
 | S4 — Analytics & Timing | ⏳ Not started |
 | S5 — AI Integration | ⏳ Not started |
 | S6 — Large Logs, Polish & Advanced | ⏳ Not started |
