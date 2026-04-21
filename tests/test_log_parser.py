@@ -7,7 +7,7 @@ from server.core.log_parser import detect_format, parse_log_file
 # ── Sample line constants ─────────────────────────────────────────────────────
 
 TID_LINE = "TID: [0] [1] [2024-03-15 09:01:06,012] INFO {org.wso2.carbon.apimgt.gateway.handlers.security.APIAuthenticationHandler} - API authentication handler initialized for tenant: carbon.super"
-BRACKET_LINE = "[2024-03-15 10:30:45,123]  INFO - ProxyServiceMessageReceiver Received message for proxy"
+BRACKET_LINE = "[2024-03-15 10:30:45,123]  INFO {org.wso2.carbon.mediation.ProxyServiceMessageReceiver} - Received message for proxy"
 BASIC_LINE = "2024-03-15 10:30:45,123 INFO  [org.wso2.carbon.user.core] - User authentication failed"
 
 TID_ERROR_WITH_STACK = """\
@@ -83,7 +83,7 @@ def test_parse_bracket_entry_fields(tmp_path):
     assert len(entries) == 1
     e = entries[0]
     assert e.level == "INFO"
-    assert e.logger == "ProxyServiceMessageReceiver"
+    assert e.logger == "org.wso2.carbon.mediation.ProxyServiceMessageReceiver"
     assert e.timestamp == "2024-03-15 10:30:45,123"
     assert e.log_file_id == "fid-2"
 

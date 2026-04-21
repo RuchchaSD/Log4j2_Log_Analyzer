@@ -669,3 +669,58 @@ body {
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* ── Format Type List ───────────────────────────────────────────────────────── */
+.format-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.format-row {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-muted);
+}
+.format-row:last-child { border-bottom: none; }
+
+.format-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.format-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.format-row-badges { display: flex; gap: 4px; }
+
+.format-row-pattern {
+  display: block;
+  font-size: 11px;
+  font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', monospace);
+  color: var(--accent-blue);
+  background: var(--bg-tertiary);
+  padding: 3px 6px;
+  border-radius: 3px;
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+.format-row-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.format-row-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.btn-danger-text { color: var(--accent-red) !important; }
+
+.section-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}

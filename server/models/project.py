@@ -9,6 +9,7 @@ class ProjectSettings(BaseModel):
     largeLogThresholdMB: int = 100
     slowOperationThresholdMs: int = 5000
     timezone: str = "UTC"
+    defaultFormatTypeId: Optional[str] = None  # default LogFormatType for new log files
 
 
 class Project(BaseModel):

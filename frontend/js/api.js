@@ -23,24 +23,30 @@ const api = {
   },
 
   // ── Logs ──────────────────────────────────────────────────────────────────
-  async uploadLog(projectId, file) {
+  async uploadLog(projectId, file, formatTypeId) {
     const form = new FormData();
     form.append('file', file);
-    const res = await fetch(`/api/logs/upload?project_id=${projectId}`, {
-      method: 'POST',
-      body: form,
-    });
+    let url = `/api/logs/upload?project_id=${projectId}`;
+    if (formatTypeId) url += `&format_type_id=${encodeURIComponent(formatTypeId)}`;
+    const res = await fetch(url, { method: 'POST', body: form });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
       throw new Error(err.detail || 'Upload failed');
     }
     return res.json();
   },
-  async addLogPath(projectId, path) {
-    return _post(`/api/logs/path?project_id=${projectId}`, { path });
+  async addLogPath(projectId, path, formatTypeId) {
+    let url = `/api/logs/path?project_id=${projectId}`;
+    if (formatTypeId) url += `&format_type_id=${encodeURIComponent(formatTypeId)}`;
+    return _post(url, { path });
   },
-  async addLogFolder(projectId, folder) {
-    return _post(`/api/logs/folder?project_id=${projectId}`, { folder });
+  async addLogFolder(projectId, folder, formatTypeId) {
+    let url = `/api/logs/folder?project_id=${projectId}`;
+    if (formatTypeId) url += `&format_type_id=${encodeURIComponent(formatTypeId)}`;
+    return _post(url, { folder });
+  },
+  async setLogFormat(projectId, logId, formatTypeId) {
+    return _put(`/api/logs/${logId}/format?project_id=${projectId}`, { format_type_id: formatTypeId || null });
   },
   async listLogs(projectId) {
     return _get(`/api/logs?project_id=${projectId}`);
@@ -64,6 +70,23 @@ const api = {
   },
   async searchLogs(projectId, body) {
     return _post(`/api/logs/search?project_id=${projectId}`, body);
+  },
+
+  // ── Format types ───────────────────────────────────────────────────────────
+  async listFormats() {
+    return _get('/api/formats');
+  },
+  async createFormat(data) {
+    return _post('/api/formats', data);
+  },
+  async updateFormat(id, updates) {
+    return _put(`/api/formats/${id}`, updates);
+  },
+  async deleteFormat(id) {
+    return _delete(`/api/formats/${id}`);
+  },
+  async testFormatPattern(pattern, line) {
+    return _post('/api/formats/test', { pattern, line });
   },
 };
 

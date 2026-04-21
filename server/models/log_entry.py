@@ -16,6 +16,7 @@ class LogFileMetadata(BaseModel):
     last_timestamp: Optional[str] = None
     added: datetime = Field(default_factory=datetime.utcnow)
     is_reference: bool = False  # True if path reference, False if copied
+    format_type_id: Optional[str] = None  # ID of the assigned LogFormatType
 
 
 class LogEntry(BaseModel):

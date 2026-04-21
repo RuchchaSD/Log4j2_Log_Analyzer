@@ -110,10 +110,17 @@ def _save_logs(project_id: str, logs: list[dict]):
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/logs/upload", status_code=201)
-async def upload_log(project_id: str = Query(...), file: UploadFile = File(...)):
+async def upload_log(
+    project_id: str = Query(...),
+    file: UploadFile = File(...),
+    format_type_id: Optional[str] = Query(None),
+):
     project = project_manager.get_project(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    # Resolve format type: explicit > project default
+    resolved_format = format_type_id or project.settings.defaultFormatTypeId
 
     dest_dir = Path(project.path) / "logs"
     dest_dir.mkdir(exist_ok=True)
@@ -130,6 +137,7 @@ async def upload_log(project_id: str = Query(...), file: UploadFile = File(...))
         stored_path=str(dest_path),
         file_type=detect_file_type(file.filename),
         is_reference=False,
+        format_type_id=resolved_format,
         **meta,
     )
     logs = _load_logs(project_id)
@@ -139,7 +147,11 @@ async def upload_log(project_id: str = Query(...), file: UploadFile = File(...))
 
 
 @router.post("/logs/path", status_code=201)
-async def add_log_path(project_id: str = Query(...), body: LogPathRequest = None):
+async def add_log_path(
+    project_id: str = Query(...),
+    format_type_id: Optional[str] = Query(None),
+    body: LogPathRequest = None,
+):
     if body is None or not body.path:
         raise HTTPException(status_code=400, detail="path required")
 
@@ -147,12 +159,16 @@ async def add_log_path(project_id: str = Query(...), body: LogPathRequest = None
     if not file_path.exists():
         raise HTTPException(status_code=404, detail=f"File not found: {body.path}")
 
+    project = project_manager.get_project(project_id)
+    resolved_format = format_type_id or (project.settings.defaultFormatTypeId if project else None)
+
     meta = extract_metadata(file_path)
     log_file = LogFileMetadata(
         filename=file_path.name,
         original_path=str(file_path),
         file_type=detect_file_type(file_path.name),
         is_reference=True,
+        format_type_id=resolved_format,
         **meta,
     )
     logs = _load_logs(project_id)
@@ -162,13 +178,20 @@ async def add_log_path(project_id: str = Query(...), body: LogPathRequest = None
 
 
 @router.post("/logs/folder", status_code=201)
-async def add_log_folder(project_id: str = Query(...), body: LogFolderRequest = None):
+async def add_log_folder(
+    project_id: str = Query(...),
+    format_type_id: Optional[str] = Query(None),
+    body: LogFolderRequest = None,
+):
     if body is None or not body.folder:
         raise HTTPException(status_code=400, detail="folder required")
 
     folder_path = Path(body.folder)
     if not folder_path.exists():
         raise HTTPException(status_code=404, detail=f"Folder not found: {body.folder}")
+
+    project = project_manager.get_project(project_id)
+    resolved_format = format_type_id or (project.settings.defaultFormatTypeId if project else None)
 
     added: list[LogFileMetadata] = []
     logs = _load_logs(project_id)
@@ -184,6 +207,7 @@ async def add_log_folder(project_id: str = Query(...), body: LogFolderRequest = 
                 original_path=str(file_path),
                 file_type=detect_file_type(file_path.name),
                 is_reference=True,
+                format_type_id=resolved_format,
                 **meta,
             )
             logs.append(json.loads(log_file.model_dump_json()))
@@ -207,3 +231,22 @@ async def delete_log(log_id: str, project_id: str = Query(...)):
         raise HTTPException(status_code=404, detail="Log file not found")
     _save_logs(project_id, new_logs)
     return {"deleted": True}
+
+
+class LogFormatAssign(BaseModel):
+    format_type_id: Optional[str] = None
+
+
+@router.put("/logs/{log_id}/format")
+async def set_log_format(log_id: str, project_id: str = Query(...), body: LogFormatAssign = LogFormatAssign()):
+    """Assign (or clear) a format type on an already-registered log file."""
+    logs = _load_logs(project_id)
+    for l in logs:
+        if l["id"] == log_id:
+            l["format_type_id"] = body.format_type_id
+            _save_logs(project_id, logs)
+            # Invalidate cached index so next fetch re-parses with new format
+            from server.core.log_indexer import invalidate_index
+            invalidate_index(log_id)
+            return l
+    raise HTTPException(status_code=404, detail="Log file not found")

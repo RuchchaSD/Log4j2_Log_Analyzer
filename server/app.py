@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from server.config import FRONTEND_DIR
-from server.api import projects, logs, parsing
+from server.api import projects, logs, parsing, formats
 
 
 class NoCacheStaticFiles(StaticFiles):
@@ -26,6 +26,7 @@ app.add_middleware(
 app.include_router(projects.router, prefix="/api")
 app.include_router(logs.router, prefix="/api")
 app.include_router(parsing.router, prefix="/api")
+app.include_router(formats.router, prefix="/api")
 
 app.mount("/static", NoCacheStaticFiles(directory=str(FRONTEND_DIR)), name="static")
 

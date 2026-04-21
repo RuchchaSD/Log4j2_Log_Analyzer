@@ -6,4 +6,5 @@ BASE_DIR = Path(__file__).parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 ANALYZER_DIR_NAME = ".wso2analyzer"
 RECENTS_FILE = Path.home() / ".wso2analyzer" / "recents.json"
+LOG_FORMATS_FILE = Path.home() / ".wso2analyzer" / "log_formats.json"
 MAX_RECENT_PROJECTS = 10

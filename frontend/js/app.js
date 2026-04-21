@@ -42,6 +42,8 @@ const App = {
       ProjectManager.renderRecentProjects();
     } else if (tabName === 'logs' && App.state.currentProject) {
       LogManager.renderLogFiles();
+    } else if (tabName === 'settings') {
+      FormatManager.renderFormatList();
     }
   },
 
@@ -76,7 +78,7 @@ const App = {
   // ── Enable / disable tabs based on project state ──────────────────────────
   _updateTabAccess() {
     const hasProject = !!App.state.currentProject;
-    const tabsRequiringProject = ['logs', 'analytics', 'repos', 'ai', 'settings'];
+    const tabsRequiringProject = ['logs', 'analytics', 'repos', 'ai'];
 
     tabsRequiringProject.forEach(tab => {
       const btn = document.querySelector(`.nav-item[data-tab="${tab}"]`);

@@ -1,8 +1,11 @@
 """In-memory index for parsed log entries. One index per log file."""
 from __future__ import annotations
 from collections import defaultdict
+from typing import Optional
 from server.models.log_entry import LogEntry
 from server.core.log_parser import parse_log_file
+from server.core.pattern_compiler import compile_pattern
+from server.core.format_manager import get_format
 
 
 class LogIndex:
@@ -17,8 +20,16 @@ class LogIndex:
         self._by_correlation: dict[str, list[int]] = defaultdict(list)
         self.parsed = False
 
-    def build(self):
-        self.entries = parse_log_file(self.file_path, self.log_file_id)
+    def build(self, format_type_id: Optional[str] = None):
+        compiled_re, field_map = None, None
+        if format_type_id:
+            fmt = get_format(format_type_id)
+            if fmt:
+                compiled_re, field_map = compile_pattern(fmt.pattern)
+        self.entries = parse_log_file(
+            self.file_path, self.log_file_id,
+            compiled_re=compiled_re, field_map=field_map,
+        )
         for i, e in enumerate(self.entries):
             self._by_level[e.level].append(i)
             if e.logger_short:
@@ -156,10 +167,14 @@ class LogIndex:
 _indices: dict[str, LogIndex] = {}
 
 
-def get_or_build_index(log_file_id: str, file_path: str) -> LogIndex:
+def get_or_build_index(
+    log_file_id: str,
+    file_path: str,
+    format_type_id: Optional[str] = None,
+) -> LogIndex:
     if log_file_id not in _indices or not _indices[log_file_id].parsed:
         idx = LogIndex(log_file_id, file_path)
-        idx.build()
+        idx.build(format_type_id=format_type_id)
         _indices[log_file_id] = idx
     return _indices[log_file_id]
 

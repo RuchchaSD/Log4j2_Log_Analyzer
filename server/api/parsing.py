@@ -11,15 +11,15 @@ from pathlib import Path
 router = APIRouter(tags=["parsing"])
 
 
-def _resolve_log_file(project_id: str, log_id: str) -> tuple[str, str]:
-    """Returns (log_file_id, file_path). Raises 404 if not found."""
+def _resolve_log_file(project_id: str, log_id: str) -> tuple[str, str, str | None]:
+    """Returns (log_file_id, file_path, format_type_id). Raises 404 if not found."""
     logs = _load_logs(project_id)
     for l in logs:
         if l["id"] == log_id:
             path = l.get("stored_path") or l.get("original_path")
             if not path or not Path(path).exists():
                 raise HTTPException(status_code=404, detail="Log file not accessible on disk")
-            return l["id"], path
+            return l["id"], path, l.get("format_type_id")
     raise HTTPException(status_code=404, detail="Log file not found")
 
 
@@ -30,8 +30,8 @@ async def get_log_entries(
     offset: int = 0,
     limit: int = 200,
 ):
-    fid, path = _resolve_log_file(project_id, log_id)
-    idx = log_indexer.get_or_build_index(fid, path)
+    fid, path, fmt_id = _resolve_log_file(project_id, log_id)
+    idx = log_indexer.get_or_build_index(fid, path, format_type_id=fmt_id)
     entries = idx.get_entries(offset, limit)
     return {
         "entries": entries,
@@ -43,8 +43,8 @@ async def get_log_entries(
 
 @router.get("/logs/{log_id}/summary")
 async def get_log_summary(log_id: str, project_id: str = Query(...)):
-    fid, path = _resolve_log_file(project_id, log_id)
-    idx = log_indexer.get_or_build_index(fid, path)
+    fid, path, fmt_id = _resolve_log_file(project_id, log_id)
+    idx = log_indexer.get_or_build_index(fid, path, format_type_id=fmt_id)
     return idx.get_summary()
 
 
@@ -64,8 +64,8 @@ class FilterRequest(BaseModel):
 
 @router.post("/logs/{log_id}/filter")
 async def filter_log_entries(log_id: str, project_id: str = Query(...), body: FilterRequest = FilterRequest()):
-    fid, path = _resolve_log_file(project_id, log_id)
-    idx = log_indexer.get_or_build_index(fid, path)
+    fid, path, fmt_id = _resolve_log_file(project_id, log_id)
+    idx = log_indexer.get_or_build_index(fid, path, format_type_id=fmt_id)
     entries, total = idx.filter_entries(
         levels=body.levels,
         components=body.components,
@@ -87,8 +87,8 @@ async def get_log_groups(log_id: str, group_by: str, project_id: str = Query(...
     valid = {"level", "component", "logger", "tenant", "correlationId"}
     if group_by not in valid:
         raise HTTPException(status_code=400, detail=f"group_by must be one of {valid}")
-    fid, path = _resolve_log_file(project_id, log_id)
-    idx = log_indexer.get_or_build_index(fid, path)
+    fid, path, fmt_id = _resolve_log_file(project_id, log_id)
+    idx = log_indexer.get_or_build_index(fid, path, format_type_id=fmt_id)
     return {"groups": idx.get_groups(group_by)}
 
 
@@ -113,7 +113,7 @@ async def search_logs(project_id: str = Query(...), body: SearchRequest = ...):
         path = l.get("stored_path") or l.get("original_path")
         if not path or not Path(path).exists():
             continue
-        idx = log_indexer.get_or_build_index(l["id"], path)
+        idx = log_indexer.get_or_build_index(l["id"], path, format_type_id=l.get("format_type_id"))
         entries, _ = idx.filter_entries(
             levels=body.levels,
             search=body.query,

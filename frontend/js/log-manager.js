@@ -34,7 +34,9 @@ const LogManager = {
   },
 
   // ── Upload modal ───────────────────────────────────────────────────────────
-  showUploadModal() {
+  async showUploadModal() {
+    const formatSelect = await _buildFormatSelect();
+
     const body = `
       <div id="upload-dropzone" class="dropzone" onclick="document.getElementById('upload-file-input').click()">
         <input id="upload-file-input" type="file" accept=".log,.txt" multiple />
@@ -42,6 +44,11 @@ const LogManager = {
         <div class="dropzone-title">Drop log files here, or click to browse</div>
         <div class="dropzone-subtitle">Supported: .log, .txt · Multiple files allowed</div>
         <div class="dropzone-hint" id="dropzone-hint">No files selected</div>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="form-label">Format Type</label>
+        <div id="upload-format-select-wrapper"></div>
+        <span class="form-hint">Choose a log4j2 layout format. Leave as Auto-detect to use format detection.</span>
       </div>`;
 
     const footer = `
@@ -49,6 +56,9 @@ const LogManager = {
       <button class="btn btn-primary" id="upload-btn" onclick="LogManager._doUpload()" disabled>Upload</button>`;
 
     Modal.show('Upload Log Files', body, footer);
+
+    const wrapper = document.getElementById('upload-format-select-wrapper');
+    if (wrapper) wrapper.appendChild(formatSelect);
 
     // Wire up file input
     const fileInput = document.getElementById('upload-file-input');
@@ -101,10 +111,13 @@ const LogManager = {
     let failed = 0;
     const projectId = App.state.currentProject?.id;
 
+    const formatTypeId = document.getElementById('upload-format-select-wrapper')
+      ?.querySelector('select')?.value || null;
+
     for (let i = 0; i < files.length; i++) {
       btn.innerHTML = `<div class="spinner spinner-sm"></div> Uploading ${i + 1}/${files.length}…`;
       try {
-        await api.uploadLog(projectId, files[i]);
+        await api.uploadLog(projectId, files[i], formatTypeId || undefined);
         succeeded++;
       } catch (err) {
         failed++;
@@ -136,13 +149,19 @@ const LogManager = {
   },
 
   // ── Add path modal ─────────────────────────────────────────────────────────
-  showAddPathModal() {
+  async showAddPathModal() {
+    const formatSelect = await _buildFormatSelect();
+
     const body = `
       <div class="form-group">
         <label class="form-label">Log File Path <span class="required">*</span></label>
         <input id="lp-path" class="form-input" type="text"
                placeholder="/var/log/wso2/wso2carbon.log" autofocus />
         <span class="form-hint">The file will be referenced by path, not copied into the project</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Format Type</label>
+        <div id="path-format-select-wrapper"></div>
       </div>`;
 
     const footer = `
@@ -150,18 +169,24 @@ const LogManager = {
       <button class="btn btn-primary" onclick="LogManager.addPath()">Add Reference</button>`;
 
     Modal.show('Add Log File by Path', body, footer);
+
+    const wrapper = document.getElementById('path-format-select-wrapper');
+    if (wrapper) wrapper.appendChild(formatSelect);
   },
 
   async addPath() {
     const path = document.getElementById('lp-path').value.trim();
     if (!path) { Toast.error('Please enter a file path'); return; }
 
+    const formatTypeId = document.getElementById('path-format-select-wrapper')
+      ?.querySelector('select')?.value || null;
+
     const btn = document.querySelector('#modal-footer .btn-primary');
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner spinner-sm"></div> Adding…';
 
     try {
-      await api.addLogPath(App.state.currentProject.id, path);
+      await api.addLogPath(App.state.currentProject.id, path, formatTypeId || undefined);
       Modal.hide();
       Toast.success(`Added log reference: ${path.split('/').pop()}`);
       LogManager.renderLogFiles();
@@ -268,6 +293,7 @@ function _logSidebarItem(log, projectId) {
     ${dateRange !== '—' ? `<div class="log-file-item-meta" style="font-size:10px">${_esc(dateRange)}</div>` : ''}
     <div class="log-file-item-actions">
       <button class="btn btn-ghost btn-xs" title="Load in viewer" onclick="event.stopPropagation(); LogManager._loadFile('${log.id}', '${projectId}', this)">Load</button>
+      <button class="btn btn-ghost btn-xs" title="Change format type" onclick="event.stopPropagation(); LogManager._showFormatPicker('${log.id}', '${projectId}')">Format</button>
       <button class="btn btn-icon btn-danger" style="padding:2px 6px;font-size:11px" title="Remove" onclick="event.stopPropagation(); LogManager.deleteLog('${log.id}', '${_esc(log.filename)}')">✕</button>
     </div>`;
 
@@ -277,6 +303,53 @@ function _logSidebarItem(log, projectId) {
 
   return item;
 }
+
+// ── Format picker helper ──────────────────────────────────────────────────────
+
+async function _buildFormatSelect(currentId) {
+  const projectDefault = App.state.currentProject?.settings?.defaultFormatTypeId;
+  const sel = await FormatManager.buildSelect(currentId || projectDefault, true);
+  sel.id = 'log-format-select';
+  return sel;
+}
+
+LogManager._showFormatPicker = async function (logId, projectId) {
+  // Find current format_type_id for this log
+  const { logs } = await api.listLogs(projectId);
+  const logMeta = logs.find(l => l.id === logId);
+  const formatSelect = await _buildFormatSelect(logMeta?.format_type_id);
+
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Format Type</label>
+      <div id="picker-format-wrapper"></div>
+      <span class="form-hint">Changing the format type will re-parse this file on next load.</span>
+    </div>`;
+
+  const footer = `
+    <button class="btn btn-ghost" onclick="Modal.hide()">Cancel</button>
+    <button class="btn btn-primary" onclick="LogManager._applyFormatPicker('${logId}', '${projectId}')">Apply</button>`;
+
+  Modal.show('Change Format Type', body, footer);
+  document.getElementById('picker-format-wrapper')?.appendChild(formatSelect);
+};
+
+LogManager._applyFormatPicker = async function (logId, projectId) {
+  const formatTypeId = document.getElementById('log-format-select')?.value || null;
+  const btn = document.querySelector('#modal-footer .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner spinner-sm"></div>';
+  try {
+    await api.setLogFormat(projectId, logId, formatTypeId || null);
+    Modal.hide();
+    Toast.success('Format type updated — reload the file to re-parse');
+    LogManager.renderLogFiles();
+  } catch (err) {
+    Toast.error(`Failed: ${err.message}`);
+    btn.disabled = false;
+    btn.innerHTML = 'Apply';
+  }
+};
 
 function _logRow(log) {
   const typeLabel = {
