@@ -57,6 +57,7 @@ ruff check .
 | S1 — Foundation | ✅ Complete |
 | S2 — Core Log Viewer | ✅ Complete |
 | S2.5 — Log Format Types | ✅ Complete |
+| S2.6 — Format Library & Project Defaults | ✅ Complete |
 | S3 — Codebase Intelligence | ⏳ Not started |
 | S4 — Analytics & Timing | ⏳ Not started |
 | S5 — AI Integration | ⏳ Not started |
